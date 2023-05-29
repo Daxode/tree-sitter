@@ -23,22 +23,29 @@ override CFLAGS += -std=gnu99 -fPIC -Ilib/src -Ilib/include
 
 # ABI versioning
 SONAME_MAJOR := 0
-SONAME_MINOR := 0
+SONAME_MINOR := 1
 
 # OS-specific bits
-ifeq ($(shell uname),Darwin)
-	SOEXT = dylib
-	SOEXTVER_MAJOR = $(SONAME_MAJOR).dylib
-	SOEXTVER = $(SONAME_MAJOR).$(SONAME_MINOR).dylib
-	LINKSHARED += -dynamiclib -Wl,-install_name,$(LIBDIR)/libtree-sitter.$(SONAME_MAJOR).dylib
+ifeq ($(OS),Windows_NT)
+	SOEXT = dll
+	SOEXTVER_MAJOR = dll.$(SONAME_MAJOR)
+	SOEXTVER = dll.$(SONAME_MAJOR).$(SONAME_MINOR)
+	LINKSHARED += -shared -Wl,-soname,tree-sitter.dll.$(SONAME_MAJOR)
 else
-	SOEXT = so
-	SOEXTVER_MAJOR = so.$(SONAME_MAJOR)
-	SOEXTVER = so.$(SONAME_MAJOR).$(SONAME_MINOR)
-	LINKSHARED += -shared -Wl,-soname,libtree-sitter.so.$(SONAME_MAJOR)
-endif
-ifneq (,$(filter $(shell uname),FreeBSD NetBSD DragonFly))
-	PCLIBDIR := $(PREFIX)/libdata/pkgconfig
+	ifeq ($(shell uname),Darwin)
+		SOEXT = dylib
+		SOEXTVER_MAJOR = $(SONAME_MAJOR).dylib
+		SOEXTVER = $(SONAME_MAJOR).$(SONAME_MINOR).dylib
+		LINKSHARED += -dynamiclib -Wl,-install_name,$(LIBDIR)/libtree-sitter.$(SONAME_MAJOR).dylib
+	else
+		SOEXT = so
+		SOEXTVER_MAJOR = so.$(SONAME_MAJOR)
+		SOEXTVER = so.$(SONAME_MAJOR).$(SONAME_MINOR)
+		LINKSHARED += -shared -Wl,-soname,libtree-sitter.so.$(SONAME_MAJOR)
+	endif
+	ifneq (,$(filter $(shell uname),FreeBSD NetBSD DragonFly))
+		PCLIBDIR := $(PREFIX)/libdata/pkgconfig
+	endif
 endif
 
 all: libtree-sitter.a libtree-sitter.$(SOEXTVER)
